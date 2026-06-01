@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Selim Khan — Photo Editing Expert</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ink: #0a0a0a;
+    --paper: #f5f0e8;
+    --cream: #ede8dc;
+    --gold: #b8953a;
+    --gold-light: #d4af5a;
+    --muted: #6b6258;
+    --border: rgba(184,149,58,0.25);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    width: 8px; height: 8px;
+    background: var(--gold);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease;
+    mix-blend-mode: multiply;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transition: transform 0.4s cubic-bezier(0.23,1,0.32,1), width 0.3s, height 0.3s;
+    opacity: 0.6;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 60px 80px 80px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.2s forwards;
+  }
+
+  .hero-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(52px, 6vw, 88px);
+    font-weight: 300;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.4s forwards;
+  }
+
+  .hero-name em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(18px, 2vw, 26px);
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.6s forwards;
+  }
+
+  .hero-desc {
+    font-size: 12px;
+    line-height: 1.9;
+    color: var(--muted);
+    max-width: 360px;
+    border-left: 1px solid var(--gold);
+    padding-left: 20px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.8s forwards;
+  }
+
+  .hero-right {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .hero-bg-art {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 80% at 60% 40%, rgba(184,149,58,0.12) 0%, transparent 70%),
+      linear-gradient(135deg, var(--cream) 0%, var(--paper) 100%);
+  }
+
+  .lens-circle {
+    position: relative;
+    z-index: 2;
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: scaleIn 1s ease 0.6s forwards;
+  }
+
+  .lens-circle::before {
+    content: '';
+    position: absolute;
+    inset: 16px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+  }
+  .lens-circle::after {
+    content: '';
+    position: absolute;
+    inset: 40px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 35% 35%, rgba(184,149,58,0.15), rgba(184,149,58,0.05) 50%, transparent 70%);
+    border: 1px solid var(--border);
+  }
+
+  .lens-inner {
+    position: relative;
+    z-index: 3;
+    text-align: center;
+  }
+
+  .lens-icon {
+    font-size: 64px;
+    line-height: 1;
+    margin-bottom: 12px;
+    filter: grayscale(0.3);
+  }
+
+  .lens-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .orbit-dot {
+    position: absolute;
+    width: 6px; height: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: orbit 8s linear infinite;
+  }
+
+  @keyframes orbit {
+    from { transform: rotate(0deg) translateX(170px); }
+    to   { transform: rotate(360deg) translateX(170px); }
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 24px 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(245,240,232,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    opacity: 0;
+    animation: fadeDown 0.6s ease 1s forwards;
+  }
+
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .nav-logo span { color: var(--gold); }
+
+  .nav-links {
+    display: flex;
+    gap: 40px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+
+  .nav-links a:hover { color: var(--gold); }
+
+  /* ─── SECTIONS ─── */
+  section {
+    padding: 120px 80px;
+    position: relative;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 60px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    max-width: 60px;
+    height: 1px;
+    background: var(--gold);
+    opacity: 0.5;
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(38px, 4vw, 60px);
+    font-weight: 300;
+    line-height: 1.1;
+    margin-bottom: 24px;
+  }
+
+  .section-title em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  /* ─── SERVICES ─── */
+  .services-section {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .services-section .section-title { color: var(--paper); }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(245,240,232,0.1);
+    margin-top: 60px;
+    border: 1px solid rgba(245,240,232,0.1);
+  }
+
+  .service-card {
+    padding: 48px 36px;
+    background: var(--ink);
+    transition: background 0.4s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .service-card::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 0; height: 1px;
+    background: var(--gold);
+    transition: width 0.5s ease;
+  }
+
+  .service-card:hover { background: #111; }
+  .service-card:hover::before { width: 100%; }
+
+  .service-num {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    margin-bottom: 20px;
+  }
+
+  .service-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--paper);
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+
+  .service-desc {
+    font-size: 11px;
+    line-height: 1.8;
+    color: rgba(245,240,232,0.45);
+  }
+
+  /* ─── SKILLS ─── */
+  .skills-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+
+  .skills-left .section-title { margin-bottom: 32px; }
+
+  .skills-left p {
+    font-size: 12px;
+    line-height: 1.9;
+    color: var(--muted);
+    max-width: 420px;
+  }
+
+  .skill-bars { margin-top: 48px; }
+
+  .skill-item {
+    margin-bottom: 28px;
+  }
+
+  .skill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .skill-name {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .skill-pct {
+    font-size: 10px;
+    color: var(--gold);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .skill-track {
+    height: 1px;
+    background: var(--border);
+    position: relative;
+  }
+
+  .skill-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    width: 0;
+    transition: width 1.5s cubic-bezier(0.23,1,0.32,1);
+  }
+
+  /* Software tags */
+  .software-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 32px;
+  }
+
+  .sw-tag {
+    padding: 8px 18px;
+    border: 1px solid var(--border);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    transition: all 0.3s;
+  }
+
+  .sw-tag:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(184,149,58,0.05);
+  }
+
+  /* ─── CONTACT ─── */
+  .contact-section {
+    background: linear-gradient(135deg, var(--cream) 0%, var(--paper) 100%);
+    text-align: center;
+    padding: 120px 80px;
+  }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    max-width: 860px;
+    margin: 60px auto 0;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .contact-item {
+    background: var(--paper);
+    padding: 44px 32px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.3s;
+    display: block;
+  }
+
+  .contact-item:hover {
+    background: var(--cream);
+  }
+
+  .contact-icon {
+    font-size: 28px;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .contact-type {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  .contact-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: var(--ink);
+    color: rgba(245,240,232,0.35);
+    padding: 36px 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+  }
+
+  footer a {
+    color: var(--gold);
+    text-decoration: none;
+  }
+
+  /* ─── DIVIDER ─── */
+  .gold-divider {
+    width: 1px;
+    height: 80px;
+    background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+    margin: 0 auto;
+  }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; min-height: auto; }
+    .hero-left { padding: 120px 32px 60px; }
+    .hero-right { display: none; }
+    nav { padding: 20px 32px; }
+    .nav-links { gap: 24px; }
+    section { padding: 80px 32px; }
+    .services-grid { grid-template-columns: 1fr; }
+    .skills-section { grid-template-columns: 1fr; gap: 48px; }
+    .contact-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 12px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Selim<span>.</span>Khan</a>
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" style="padding:0;">
+  <div class="hero-left">
+    <p class="hero-eyebrow">Photo Retouching Expert</p>
+    <h1 class="hero-name">Selim<br><em>Khan</em></h1>
+    <p class="hero-title">Professional Photo Editor</p>
+    <p class="hero-desc">
+      Transforming ordinary images into extraordinary visuals. Specialized in portrait retouching, product photography, jewelry editing, and creative compositing — delivering pixel-perfect results for clients worldwide.
+    </p>
+  </div>
+  <div class="hero-right">
+    <div class="hero-bg-art"></div>
+    <div class="lens-circle">
+      <div class="orbit-dot"></div>
+      <div class="lens-inner">
+        <div class="lens-icon">📷</div>
+        <div class="lens-text">Pixel Perfect</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services-section" id="services">
+  <div class="section-label">What I Do</div>
+  <h2 class="section-title" style="color:var(--paper);">Editing <em>Services</em></h2>
+
+  <div class="services-grid">
+    <div class="service-card reveal">
+      <div class="service-num">01</div>
+      <div class="service-name">Portrait Retouching</div>
+      <div class="service-desc">Skin smoothing, blemish removal, facial enhancement — natural and professional finish every time.</div>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-num">02</div>
+      <div class="service-name">Product Retouching</div>
+      <div class="service-desc">Clean, sharp, e-commerce-ready product images that convert and impress buyers.</div>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-num">03</div>
+      <div class="service-name">Color Correction</div>
+      <div class="service-desc">Precise tonal balance, accurate color grading, and mood-consistent editing across entire shoots.</div>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-num">04</div>
+      <div class="service-name">Background Remove & Replace</div>
+      <div class="service-desc">Clean cutouts with masking, shadow creation, and seamless background compositing.</div>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-num">05</div>
+      <div class="service-name">Jewellery Retouching</div>
+      <div class="service-desc">Ultra-detailed editing for gold, silver, gemstones — making every piece shine brilliantly.</div>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-num">06</div>
+      <div class="service-name">Wedding Retouching</div>
+      <div class="service-desc">Timeless, romantic edits for wedding galleries — memories made even more beautiful.</div>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-num">07</div>
+      <div class="service-name">Masking & Shadow</div>
+      <div class="service-desc">Hair masking, complex selections, drop shadows, and reflection effects with precision.</div>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-num">08</div>
+      <div class="service-name">Neck Joint</div>
+      <div class="service-desc">Ghost mannequin / neck joint editing for apparel — professional fashion catalog ready.</div>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-num">09</div>
+      <div class="service-name">Image Resize & Optimization</div>
+      <div class="service-desc">Proper sizing for web, print, and social — without quality loss, delivered fast.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="skills-section">
+    <div class="skills-left reveal">
+      <div class="section-label">Expertise</div>
+      <h2 class="section-title">Tools &amp; <em>Skills</em></h2>
+      <p>Years of professional experience with industry-leading software, delivering consistent, high-quality results across every project type — from single portraits to bulk e-commerce orders.</p>
+
+      <div class="software-grid">
+        <span class="sw-tag">Adobe Photoshop</span>
+        <span class="sw-tag">Lightroom</span>
+        <span class="sw-tag">Illustrator</span>
+        <span class="sw-tag">Camera Raw</span>
+        <span class="sw-tag">Capture One</span>
+      </div>
+    </div>
+
+    <div class="skill-bars reveal">
+      <div class="skill-item">
+        <div class="skill-header">
+          <span class="skill-name">Portrait Retouching</span>
+          <span class="skill-pct">98%</span>
+        </div>
+        <div class="skill-track"><div class="skill-fill" data-width="98"></div></div>
+      </div>
+      <div class="skill-item">
+        <div class="skill-header">
+          <span class="skill-name">Product & Jewellery</span>
+          <span class="skill-pct">96%</span>
+        </div>
+        <div class="skill-track"><div class="skill-fill" data-width="96"></div></div>
+      </div>
+      <div class="skill-item">
+        <div class="skill-header">
+          <span class="skill-name">Color Correction</span>
+          <span class="skill-pct">95%</span>
+        </div>
+        <div class="skill-track"><div class="skill-fill" data-width="95"></div></div>
+      </div>
+      <div class="skill-item">
+        <div class="skill-header">
+          <span class="skill-name">Background Removal</span>
+          <span class="skill-pct">99%</span>
+        </div>
+        <div class="skill-track"><div class="skill-fill" data-width="99"></div></div>
+      </div>
+      <div class="skill-item">
+        <div class="skill-header">
+          <span class="skill-name">Wedding Retouching</span>
+          <span class="skill-pct">94%</span>
+        </div>
+        <div class="skill-track"><div class="skill-fill" data-width="94"></div></div>
+      </div>
+      <div class="skill-item">
+        <div class="skill-header">
+          <span class="skill-name">Masking & Compositing</span>
+          <span class="skill-pct">97%</span>
+        </div>
+        <div class="skill-track"><div class="skill-fill" data-width="97"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact-section" id="contact">
+  <div class="gold-divider"></div>
+  <br><br>
+  <div class="section-label" style="justify-content:center;">Get In Touch</div>
+  <h2 class="section-title reveal">Let's Work <em>Together</em></h2>
+  <p class="reveal" style="font-size:12px; color:var(--muted); max-width:420px; margin:0 auto; line-height:1.9;">
+    Ready to elevate your images? Reach out via any channel below — fast response, professional results.
+  </p>
+
+  <div class="contact-grid reveal">
+    <a class="contact-item" href="tel:+8801581225837">
+      <span class="contact-icon">📞</span>
+      <div class="contact-type">Phone / WhatsApp</div>
+      <div class="contact-value">01581-225837</div>
+    </a>
+    <a class="contact-item" href="mailto:khan322selim@gmail.com">
+      <span class="contact-icon">✉️</span>
+      <div class="contact-type">Email</div>
+      <div class="contact-value">khan322selim<br>@gmail.com</div>
+    </a>
+    <a class="contact-item" href="https://www.linkedin.com/in/selim-khan-b0267b1b6" target="_blank">
+      <span class="contact-icon">💼</span>
+      <div class="contact-type">LinkedIn</div>
+      <div class="contact-value">Selim Khan</div>
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>© 2026 Selim Khan — Photo Editing Expert</span>
+  <span>Built with ❤️ &nbsp;|&nbsp; <a href="mailto:khan322selim@gmail.com">khan322selim@gmail.com</a></span>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.transform = `translate(${mx - 4}px, ${my - 4}px)`;
+  });
+
+  function animRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.transform = `translate(${rx - 18}px, ${ry - 18}px)`;
+    requestAnimationFrame(animRing);
+  }
+  animRing();
+
+  // Reveal on scroll
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  reveals.forEach(el => observer.observe(el));
+
+  // Skill bars animate on scroll
+  const bars = document.querySelectorAll('.skill-fill');
+  const barObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const w = entry.target.dataset.width;
+        entry.target.style.width = w + '%';
+      }
+    });
+  }, { threshold: 0.3 });
+
+  bars.forEach(bar => barObserver.observe(bar));
+</script>
+</body>
+</html>
